@@ -5,6 +5,13 @@ meow = require('meow')
 fs = require('fs-extra-promise')
 path = require('path')
 parser = require('post-parse')
+chalk = require('chalk')
+
+# Color settings
+error = chalk.bold.red
+info = chalk.bold.green
+info_high = chalk.bold.yellow
+info_low = chalk.white.dim
 
 cli = meow(
   help: [
@@ -17,13 +24,13 @@ cli = meow(
 
 directory = cli.input[0]
 unless directory?
-  console.error "Needs a directory."
+  console.log(error("Oops! Needs a directory."))
   process.exit 1
 
-console.log "Processing #{directory}"
+console.log info("Processing #{directory}")
 parser(directory)
   .then((posts) ->
     for post in posts
-      console.log "Title: #{post.title}"
+      console.log info_low("Title") + info_high(" #{post.title}")
     return)
   .catch((e) -> console.log e)
