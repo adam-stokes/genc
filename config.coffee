@@ -1,13 +1,14 @@
 hb = require('handlebars')
 fs = require('fs-extra-promise')
 moment = require('moment')
+path = require('path')
 
 config =
   templates:
-    single: fs.readFileSync("templates/single.hbs").toString()
-    feed: fs.readFileSync("templates/feed.hbs").toString()
-    sitemap: fs.readFileSync("templates/sitemap.hbs").toString()
-    home: fs.readFileSync("templates/home.hbs").toString()
+    single: fs.readFileSync("./templates/single.hbs").toString()
+    feed: fs.readFileSync("./templates/feed.hbs").toString()
+    sitemap: fs.readFileSync("./templates/sitemap.hbs").toString()
+    home: fs.readFileSync("./templates/home.hbs").toString()
 
 nodeEnv = process.env.NODE_ENV or 'development'
 
@@ -26,7 +27,8 @@ siteSettings =
 config.site = siteSettings[nodeEnv]
 
 for partial in ['footer', 'header', 'sidebar']
-  hb.registerPartial partial, fs.readFileSync("templates/partials/#{partial}.hbs").toString()
+  pFile = fs.readFileSync("./templates/partials/#{partial}.hbs").toString()
+  hb.registerPartial partial, pFile
 
 hb.registerHelper 'date', (date) ->
   moment(date).format 'Do MMMM YYYY'
