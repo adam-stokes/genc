@@ -1,6 +1,5 @@
 #!/usr/bin/env coffee
 
-Promise = require('bluebird')
 meow = require('meow')
 fs = require('fs-extra-promise')
 path = require('path')
