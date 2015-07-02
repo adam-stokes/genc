@@ -40,5 +40,11 @@ unless directory?
 
 console.log info("Processing #{directory}")
 parser(directory)
+  .then((posts) ->
+    return template(config.templates.single, posts)
+      .then(save('build', posts)))
+  .then((posts) -> return template(config.templates.feed, posts))
+  .then((posts) -> return template(config.templates.sitemap, posts))
+  .then((posts) -> return template(config.templates.home, posts))
   .then((posts) -> return save('build', posts))
   .catch((e) -> console.log e)
