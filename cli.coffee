@@ -13,22 +13,26 @@ info = chalk.bold.green
 info_high = chalk.bold.yellow
 info_low = chalk.white.dim
 
-# config items
-try
-  config = require('./config')
-catch e
-  console.log error("Cannot find config.js in cwd. Please create that file.")
-  process.exit 1
-
 cli = meow(
   help: [
     'Usage',
     ' genc <dir>',
     '',
+    ' -c --config <file>  Config file for site (config.coffee)'
     'eg:'
     ' $ genc ~/Dropbox/Articles',
   ].join('\n')
 )
+
+# config items
+configFile = cli.flags.config || cli.flags.c
+unless configFile?
+  console.log(error("Need to pass a --config file."))
+try
+  config = require(path.resolve("#{configFile}"))
+catch e
+  console.log error("Unable to load config file: #{e}")
+  process.exit 1
 
 directory = cli.input[0]
 
