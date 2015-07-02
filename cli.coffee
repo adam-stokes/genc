@@ -6,7 +6,6 @@ fs = require('fs-extra-promise')
 path = require('path')
 parser = require('post-parse')
 save = require('post-save')
-template = require('post-template')
 chalk = require('chalk')
 
 # Color settings
@@ -38,13 +37,21 @@ unless directory?
   console.log(error("Oops! Needs a directory."))
   process.exit 1
 
-console.log info("Processing #{directory}")
 parser(directory)
   .then((posts) ->
-    return template(config.templates.single, posts)
-      .then(save('build', posts)))
-  .then((posts) -> return template(config.templates.feed, posts))
-  .then((posts) -> return template(config.templates.sitemap, posts))
-  .then((posts) -> return template(config.templates.home, posts))
-  .then((posts) -> return save('build', posts))
+    console.log info_high("Generating individual posts.")
+    for post in posts
+      save.single('build', config.templates.single, post)
+    return posts)
+  .then((posts) ->
+    console.log info_high("Generating feed.")
+    save.collection('build', config.templates.feed, 'feed.xml', posts)
+    return posts)
+  .then((posts) ->
+    console.log info_high("Generating sitemap.")
+    save.collection('build', config.templates.sitemap, 'sitemap.xml', posts)
+    return posts)
+  .then((posts) ->
+    console.log info_high("Generating index")
+    return save.collection('build', config.templates.home, 'index.html', posts))
   .catch((e) -> console.log e)
