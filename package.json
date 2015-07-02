@@ -23,6 +23,7 @@
     "chalk": "^1.1.0",
     "fs-extra-promise": "^0.1.3",
     "meow": "^3.3.0",
-    "post-parse": "battlemidget/post-parse"
+    "post-parse": "battlemidget/post-parse",
+    "post-save": "battlemidget/post-save"
   }
 }

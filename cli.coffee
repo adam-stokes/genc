@@ -5,6 +5,7 @@ meow = require('meow')
 fs = require('fs-extra-promise')
 path = require('path')
 parser = require('post-parse')
+save = require('post-save')
 chalk = require('chalk')
 
 # Color settings
@@ -29,8 +30,5 @@ unless directory?
 
 console.log info("Processing #{directory}")
 parser(directory)
-  .then((posts) ->
-    for post in posts
-      console.log info_low("Title") + info_high(" #{post.title}")
-    return)
+  .then((posts) -> return save('build', posts))
   .catch((e) -> console.log e)
