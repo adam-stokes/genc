@@ -6,6 +6,7 @@ fs = require('fs-extra-promise')
 path = require('path')
 parser = require('post-parse')
 save = require('post-save')
+template = require('post-template')
 chalk = require('chalk')
 
 # Color settings
@@ -14,16 +15,25 @@ info = chalk.bold.green
 info_high = chalk.bold.yellow
 info_low = chalk.white.dim
 
+# config items
+try
+  config = require('./config')
+catch e
+  console.log error("Cannot find config.js in cwd. Please create that file.")
+  process.exit 1
+
 cli = meow(
   help: [
     'Usage',
     ' genc <dir>',
     '',
+    'eg:'
     ' $ genc ~/Dropbox/Articles',
   ].join('\n')
 )
 
 directory = cli.input[0]
+
 unless directory?
   console.log(error("Oops! Needs a directory."))
   process.exit 1
