@@ -5,13 +5,7 @@ fs = require('fs-extra-promise')
 path = require('path')
 parser = require('post-parse')
 save = require('post-save')
-chalk = require('chalk')
-
-# Color settings
-error = chalk.bold.red
-info = chalk.bold.green
-info_high = chalk.bold.yellow
-info_low = chalk.white.dim
+logSym = require('log-symbols')
 
 cli = meow(
   help: [
@@ -27,35 +21,35 @@ cli = meow(
 # config items
 configFile = cli.flags.config || cli.flags.c
 unless configFile?
-  console.log(error("Need to pass a --config file."))
+  console.log(logSym.error, "Need to pass a --config file.")
 try
   config = require(path.resolve("#{configFile}"))
   config.init()
 catch e
-  console.log error("Unable to load config file: #{e}")
+  console.log(logSym.error, "Unable to load config file: #{e}")
   process.exit 1
 
 directory = cli.input[0]
 
 unless directory?
-  console.log(error("Oops! Needs a directory."))
+  console.log(logSym.error, "Oops! Needs a directory.")
   process.exit 1
 
 parser(directory)
   .then((posts) ->
-    console.log info_high("Generating individual posts.")
+    console.log(logSym.info, "Generating individual posts.")
     for post in posts
       save.single('build', config.templates.single, post)
     return posts)
   .then((posts) ->
-    console.log info_high("Generating feed.")
+    console.log(logSym.info, "Generating feed.")
     save.collection('build', config.templates.feed, 'feed.xml', posts)
     return posts)
   .then((posts) ->
-    console.log info_high("Generating sitemap.")
+    console.log(logSym.info, "Generating sitemap.")
     save.collection('build', config.templates.sitemap, 'sitemap.xml', posts)
     return posts)
   .then((posts) ->
-    console.log info_high("Generating index")
+    console.log(logSym.info, "Generating index")
     return save.collection('build', config.templates.home, 'index.html', posts))
   .catch((e) -> console.log "Problem: #{e}")
