@@ -30,6 +30,7 @@ unless configFile?
   console.log(error("Need to pass a --config file."))
 try
   config = require(path.resolve("#{configFile}"))
+  config.init()
 catch e
   console.log error("Unable to load config file: #{e}")
   process.exit 1
@@ -57,4 +58,4 @@ parser(directory)
   .then((posts) ->
     console.log info_high("Generating index")
     return save.collection('build', config.templates.home, 'index.html', posts))
-  .catch((e) -> console.log e)
+  .catch((e) -> console.log "Problem: #{e}")
