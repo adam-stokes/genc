@@ -12,9 +12,9 @@ cli = meow(
     'Usage',
     ' genc <dir>',
     '',
-    ' -c --config <file>  Config file for site (config.coffee)'
-    'eg:'
-    ' $ genc ~/Dropbox/Articles',
+    ' -c --config <file>  Config file for site, format of <config-name>.coffee'
+    '   eg:'
+    '    $ genc --config config ~/Dropbox/Articles',
   ].join('\n')
 )
 
