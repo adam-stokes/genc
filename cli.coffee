@@ -23,8 +23,7 @@ configFile = cli.flags.config || cli.flags.c
 unless configFile?
   console.log(logSym.error, "Need to pass a --config file.")
 try
-  config = require(path.resolve("#{configFile}"))
-  config.init()
+  config = require(process.cwd() + '/config.coffee')
 catch e
   console.log(logSym.error, "Unable to load config file: #{e}")
   process.exit 1
