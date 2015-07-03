@@ -38,17 +38,17 @@ parser(directory)
   .then((posts) ->
     console.log(logSym.info, "Generating individual posts.")
     for post in posts
-      save.single('build', hb.templates['single'], post)
+      save.single('build', config.templates['single'], post)
     return posts)
   .then((posts) ->
     console.log(logSym.info, "Generating feed.")
-    save.collection('build', hb.templates['feed'], 'feed.xml', posts)
+    save.collection('build', config.templates['feed'], 'feed.xml', posts)
     return posts)
   .then((posts) ->
     console.log(logSym.info, "Generating sitemap.")
-    save.collection('build', hb.templates['sitemap'], 'sitemap.xml', posts)
+    save.collection('build', config.templates['sitemap'], 'sitemap.xml', posts)
     return posts)
   .then((posts) ->
     console.log(logSym.info, "Generating index")
-    return save.collection('build', hb.templates['home'], 'index.html', posts))
+    return save.collection('build', config.templates['home'], 'index.html', posts))
   .catch((e) -> console.log "Problem: #{e}")
