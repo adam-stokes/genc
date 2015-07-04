@@ -51,4 +51,6 @@ parser(directory)
   .then((posts) ->
     console.log(logSym.info, "Generating index")
     return save.collection('build', config.templates['home'], 'index.html', posts))
-  .catch((e) -> console.log "Problem: #{e}")
+  .then(->
+    return console.log(logSym.success, "Completed!"))
+  .catch((e) -> console.log(logSym.error, "Problem: #{e}"))
