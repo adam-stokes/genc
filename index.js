@@ -3,7 +3,7 @@
 var promise = require("bluebird");
 var parse = require("genc-parse");
 var isDir = require("is-dir");
-var isFile = require("is-file");
+var isFile = require("is-file-promise");
 var expandUser = require("expand-tilde");
 var is = require("is");
 var debug = require("debug")("genc");
@@ -75,10 +75,13 @@ Genc.prototype.init = function(dir){
 };
 
 Genc.prototype.generate = function(){
-    if(!isFile(join(process.cwd(), ".genc.json"))){
+    var gencPath = join(process.cwd(), ".genc.json");
+    debug(gencPath);
+    return isFile(join(process.cwd(), ".genc.json")).then(function(){
+        return this.posts();
+    }).catch(function(){
         throw Error("No .genc.json found");
-    }
-    return this.posts();
+    });
 };
 
 module.exports = new Genc();

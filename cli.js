@@ -38,7 +38,7 @@ co(function*() {
     case "compile":
     default:
         genc.log("info", "Starting genc...");
-        yield genc.posts();
+        yield genc.generate();
     }
 }).catch(function(e) {
     genc.log("error", e);
