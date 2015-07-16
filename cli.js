@@ -9,14 +9,13 @@ var genc = require(".");
 co(function*() {
     program.version(gencConf.version);
 
-    program.on("-h, --help", function(){
+    program.on("--help", function(){
         console.log("  Commands:");
         console.log();
         console.log("    init [dir]      Initialize a genc site");
         console.log("    gen-config      Prints a skeleton config");
         console.log("    generate        Generate site");
         console.log();
-        throw Error();
     });
 
     program.parse(process.argv);
