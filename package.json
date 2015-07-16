@@ -2,31 +2,33 @@
   "name": "genc",
   "version": "1.0.6",
   "description": "site gen",
-  "files": [
-    "cli.coffee"
-  ],
   "scripts": {
-    "test": "coffee test.coffee"
+    "test": "coffee test.js"
   },
   "bin": {
-    "genc": "cli.coffee"
+    "genc": "cli.js"
   },
   "preferGlobal": "true",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/battlemidget/genc.git"
-  },
+  "repository": "battlemidget/genc",
   "author": "adam stokes <hackr@cypherbook.com>",
   "license": "MIT",
   "dependencies": {
     "chalk": "^1.1.0",
+    "co": "^4.6.0",
     "commander": "^2.8.1",
+    "debug": "^2.2.0",
+    "expand-tilde": "^1.2.0",
     "fs-extra-promise": "^0.1.3",
+    "genc-parse": "battlemidget/genc-parse",
     "handlebars": "^3.0.3",
+    "is": "^3.0.1",
     "is-dir": "^1.0.0",
     "is-file": "^1.0.0",
+    "jsonfile": "^2.2.1",
+    "lodash": "^3.10.0",
+    "mkdirp": "^0.5.1",
     "moment": "^2.10.3",
-    "post-parse": "battlemidget/post-parse",
+    "mz": "^2.0.0",
     "post-save": "battlemidget/post-save"
   }
 }
