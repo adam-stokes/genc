@@ -25,12 +25,19 @@ function Genc(){
         templateDir: "templates",
         partialDir: "templates/partials",
         assetsDir: "static",
-      blogPostsDir: expandUser("~/Dropbox/Articles")
+        blogPostsDir: expandUser("~/Dropbox/Articles")
     };
 }
 
-Genc.prototype.log = function(msg){
-    console.log(colors.green(msg));
+Genc.prototype.log = function(level, msg){
+    switch(level){
+    case "error":
+        console.log(colors.bold.red(msg));
+        break;
+    case "info":
+    default:
+        console.log(colors.green("Info: %s"), msg);
+    }
 };
 
 Genc.prototype.genConfig = function(){
@@ -67,13 +74,11 @@ Genc.prototype.init = function(dir){
         });
 };
 
-Genc.prototype.generate = function*(){
+Genc.prototype.generate = function(){
     if(!isFile(join(process.cwd(), ".genc.json"))){
         throw Error("No .genc.json found");
     }
-    var posts = yield this.posts();
-    debug(posts);
-    return posts;
+    return this.posts();
 };
 
 module.exports = new Genc();

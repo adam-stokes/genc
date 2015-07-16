@@ -33,14 +33,14 @@ co(function*() {
         yield genc.init(args[0]);
         break;
     case "gen-config":
-        genc.log(genc.genConfig());
+        genc.log("info", genc.genConfig());
         break;
     case "generate":
     case "compile":
     default:
-        genc.log("Starting genc...".green);
+        genc.log("info", "Starting genc...");
         yield genc.posts();
     }
 }).catch(function(e) {
-    console.log("%s", e);
+    genc.log("error", e);
 });
