@@ -1,7 +1,8 @@
 "use strict";
 
-var promise = require("bluebird");
+var promise = require("native-or-bluebird");
 var parse = require("genc-parse");
+var fs = require("mz/fs");
 var isDir = require("is-dir");
 var isFile = require("is-file-promise");
 var expandUser = require("expand-tilde");
@@ -11,6 +12,8 @@ var jsonfile = require("jsonfile");
 var join = require("path").join;
 var mkdirp = promise.promisify(require("mkdirp"));
 var colors = require("colors");
+var moment = require("moment");
+var editor = require("editor");
 
 jsonfile.spaces = 2;
 var writeJson = promise.promisify(jsonfile.writeFile, jsonfile);
@@ -37,6 +40,29 @@ Genc.prototype.log = function(level, msg){
     case "info":
     default:
         console.log(colors.bold.cyan("Info: %s"), msg);
+    }
+};
+
+Genc.prototype.newPost = function*(title, tags){
+    debug("New post: %s, tags: %s", title, tags);
+    if (tags != null) {
+        tags = "[" + tags + "]";
+    } else {
+        tags = "[]";
+    }
+
+    var fullPath = join(this.conf.blogPostsDir, title + ".md");
+    var timestamp = moment.utc().format();
+    var template = "---\ntitle: " +
+        title +
+        "\ndate: " +
+        timestamp +
+        "\ntags: " +
+        tags +
+        "\n---\n\n# Write your post here\n\nFill in whatever blogish topic you want.";
+    if (isDir(this.conf.blogPostsDir)){
+        yield fs.writeFile(fullPath, template);
+        return yield editor(fullPath);
     }
 };
 

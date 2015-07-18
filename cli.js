@@ -2,44 +2,49 @@
 "use strict";
 
 var co = require("co");
-var program = require("commander");
+var Argparse = require("argparse").ArgumentParser;
 var gencConf = require("./package.json");
 var genc = require(".");
 
 co(function*() {
-    program.version(gencConf.version);
-
-    program.on("--help", function(){
-        console.log("  Commands:");
-        console.log();
-        console.log("    init [dir]      Initialize a genc site");
-        console.log("    gen-config      Prints a skeleton config");
-        console.log("    generate        Generate site");
-        console.log();
+    var parser = new Argparse({
+        version: gencConf.version,
+        addHelp: true,
+        description: "genc - static site generator"
     });
 
-    program.parse(process.argv);
+    var subparser = parser.addSubparsers({
+        title: "subcommands",
+        dest: "command"
+    });
 
-    var args = process.argv.slice(3);
-    var cmd = program.args[0];
+    var newPost = subparser.addParser("new", {addHelp: true, help: "new help"});
+    newPost.addArgument(
+        ["title"],
+        {
+            help: "Title of page."
+        }
+    );
+    newPost.addArgument(
+        ["-t", "--tags"],
+        {
+            action: "store",
+            help: "Creates a new page or post."
+        }
+    );
 
-    if (!cmd) {
-        program.help();
+    subparser.addParser("gen-config", {addHelp: true, help: "gen-config help"});
+    subparser.addParser("build", {addHelp: true, help: "Build your site."});
+
+    var args = parser.parseArgs();
+    if(args.command === "new"){
+        yield genc.newPost(args.title, args.tags);
     }
-
-    switch(cmd) {
-    case "init":
-        yield genc.init(args[0]);
-        break;
-    case "gen-config":
-        genc.log("info", genc.genConfig());
-        break;
-    case "generate":
-    case "compile":
-    default:
-        genc.log("info", "Starting genc...");
-        var posts = yield genc.generate();
-        genc.log("info", "Finished.");
+    if (args.command === "gen-config"){
+        console.log(genc.genConfig());
+    }
+    if (args.command === "build"){
+        yield genc.generate();
     }
 }).catch(function(e) {
     genc.log("error", e);
