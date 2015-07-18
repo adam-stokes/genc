@@ -7,13 +7,13 @@ var isDir = require("is-dir");
 var isFile = require("is-file-promise");
 var expandUser = require("expand-tilde");
 var is = require("is");
-var debug = require("debug")("genc");
 var jsonfile = require("jsonfile");
 var join = require("path").join;
 var mkdirp = promise.promisify(require("mkdirp"));
-var colors = require("colors");
 var moment = require("moment");
 var editor = require("editor");
+var Collection = require("./collection");
+var debug = require("debug")("genc:init");
 
 jsonfile.spaces = 2;
 var writeJson = promise.promisify(jsonfile.writeFile, jsonfile);
@@ -32,19 +32,8 @@ function Genc(){
     };
 }
 
-Genc.prototype.log = function(level, msg){
-    switch(level){
-    case "error":
-        console.log(colors.bold.red(msg));
-        break;
-    case "info":
-    default:
-        console.log(colors.bold.cyan("Info: %s"), msg);
-    }
-};
-
 Genc.prototype.newPost = function*(title, tags){
-    debug("New post: %s, tags: %s", title, tags);
+    this.debug.log("New post: %s, tags: %s", title, tags);
     if (tags != null) {
         tags = "[" + tags + "]";
     } else {
@@ -66,16 +55,15 @@ Genc.prototype.newPost = function*(title, tags){
     }
 };
 
-Genc.prototype.genConfig = function(){
-    return JSON.stringify(this.conf, null, 2);
+Genc.prototype.config = function(){
+    return JSON.stringify(this.conf);
 };
 
-Genc.prototype.posts = function(){
+Genc.prototype.collection = function(){
     if (!isDir(this.conf.blogPostsDir)) {
-        debug("Problem with posts()");
         throw Error("Posts directory not found.");
     }
-    return parse(this.conf.blogPostsDir);
+    return new Collection(parse(this.conf.blogPostsDir));
 };
 
 Genc.prototype.init = function*(dir){
@@ -93,10 +81,10 @@ Genc.prototype.init = function*(dir){
     }
 };
 
-Genc.prototype.generate = function*(){
+Genc.prototype.export = function*(){
     if (yield isFile(join(process.cwd(), ".genc.json"))){
         return yield this.posts();
     }
 };
 
-module.exports = new Genc();
+module.exports = Genc;
