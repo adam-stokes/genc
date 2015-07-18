@@ -38,7 +38,8 @@ co(function*() {
     case "compile":
     default:
         genc.log("info", "Starting genc...");
-        yield genc.generate();
+        var posts = yield genc.generate();
+        genc.log("info", "Finished.");
     }
 }).catch(function(e) {
     genc.log("error", e);

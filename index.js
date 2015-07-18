@@ -8,12 +8,12 @@ var expandUser = require("expand-tilde");
 var is = require("is");
 var debug = require("debug")("genc");
 var jsonfile = require("jsonfile");
-var _ = require("lodash");
 var join = require("path").join;
 var mkdirp = promise.promisify(require("mkdirp"));
 var colors = require("colors");
 
 jsonfile.spaces = 2;
+var writeJson = promise.promisify(jsonfile.writeFile, jsonfile);
 
 function Genc(){
     this.conf = {
@@ -36,7 +36,7 @@ Genc.prototype.log = function(level, msg){
         break;
     case "info":
     default:
-        console.log(colors.green("Info: %s"), msg);
+        console.log(colors.bold.cyan("Info: %s"), msg);
     }
 };
 
@@ -46,42 +46,31 @@ Genc.prototype.genConfig = function(){
 
 Genc.prototype.posts = function(){
     if (!isDir(this.conf.blogPostsDir)) {
+        debug("Problem with posts()");
         throw Error("Posts directory not found.");
     }
     return parse(this.conf.blogPostsDir);
 };
 
-Genc.prototype.init = function(dir){
-    var self = this;
-    debug("Generating skeleton in %s", dir);
-
+Genc.prototype.init = function*(dir){
     if(!is.string(dir)) {
         throw Error("Must define a directory.");
     }
     if(isDir(dir)) {
         throw Error("Directory already exists, not overwriting.");
     }
-    return mkdirp(dir)
-        .then(function(){
-            return jsonfile.writeFileSync(join(dir, ".genc.json"), self.conf);
-        }).then(function(){
-            return _.each(["templates/partials", "static"], function(dst){
-                mkdirp.sync(join(dir, dst));
-            });
-        })
-        .catch(function(e){
-            throw Error(e);
-        });
+    yield mkdirp(dir);
+    yield writeJson(join(dir, ".genc.json"), this.conf);
+    var tplDirs = ["templates/partials", "src"];
+    for(var dst of tplDirs){
+        yield mkdirp(join(dir, dst));
+    }
 };
 
-Genc.prototype.generate = function(){
-    var gencPath = join(process.cwd(), ".genc.json");
-    debug(gencPath);
-    return isFile(join(process.cwd(), ".genc.json")).then(function(){
-        return this.posts();
-    }).catch(function(){
-        throw Error("No .genc.json found");
-    });
+Genc.prototype.generate = function*(){
+    if (yield isFile(join(process.cwd(), ".genc.json"))){
+        return yield this.posts();
+    }
 };
 
 module.exports = new Genc();
