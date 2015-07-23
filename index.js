@@ -3,7 +3,7 @@
 var promise = require("native-or-bluebird");
 var parse = require("genc-parse");
 var fs = require("mz/fs");
-var isDir = require("is-dir");
+var isDir = require("is-dir-promise");
 var isFile = require("is-file-promise");
 var expandUser = require("expand-tilde");
 var is = require("is");
@@ -33,7 +33,7 @@ function Genc(){
 }
 
 Genc.prototype.newPost = function*(title, tags){
-    this.debug.log("New post: %s, tags: %s", title, tags);
+    debug.log("New post: %s, tags: %s", title, tags);
     if (tags != null) {
         tags = "[" + tags + "]";
     } else {
@@ -49,7 +49,7 @@ Genc.prototype.newPost = function*(title, tags){
         "\ntags: " +
         tags +
         "\n---\n\n# Write your post here\n\nFill in whatever blogish topic you want.";
-    if (isDir(this.conf.blogPostsDir)){
+    if (yield isDir(this.conf.blogPostsDir)){
         yield fs.writeFile(fullPath, template);
         return yield editor(fullPath);
     }
