@@ -20,7 +20,10 @@
     "editor": "^1.0.0",
     "expand-tilde": "^1.2.0",
     "genc-parse": "battlemidget/genc-parse",
+    "good": "^6.3.0",
+    "good-console": "^5.0.2",
     "handlebars": "^3.0.3",
+    "hapi": "^8.8.0",
     "is": "^3.0.1",
     "is-dir-promise": "^1.0.0",
     "is-file-promise": "^1.0.0",
@@ -31,6 +34,7 @@
     "moment": "^2.10.3",
     "mz": "^2.0.0",
     "native-or-bluebird": "^1.2.0",
-    "post-save": "battlemidget/post-save"
+    "post-save": "battlemidget/post-save",
+    "yar": "^3.0.3"
   }
 }
