@@ -5,35 +5,24 @@ var parse = require("genc-parse");
 var fs = require("mz/fs");
 var isDir = require("is-dir-promise");
 var isFile = require("is-file-promise");
-var expandUser = require("expand-tilde");
-var is = require("is");
 var jsonfile = require("jsonfile");
 var join = require("path").join;
 var mkdirp = promise.promisify(require("mkdirp"));
 var moment = require("moment");
 var editor = require("editor");
 var Collection = require("./collection");
-var debug = require("debug")("genc:init");
+var Log = require("log");
+var log = new Log();
 
 jsonfile.spaces = 2;
 var writeJson = promise.promisify(jsonfile.writeFile, jsonfile);
 
-function Genc(){
-    this.conf = {
-        sitename: null,
-        slogan: null,
-        description: null,
-        author: null,
-        title: null,
-        templateDir: "templates",
-        partialDir: "templates/partials",
-        assetsDir: "static",
-        blogPostsDir: expandUser("~/Dropbox/Articles")
-    };
+function Genc(conf){
+    this.conf = conf;
 }
 
 Genc.prototype.newPost = function*(title, tags){
-    debug.log("New post: %s, tags: %s", title, tags);
+    log.info("New post: %s, tags: %s", title, tags);
     if (tags != null) {
         tags = "[" + tags + "]";
     } else {
@@ -66,18 +55,10 @@ Genc.prototype.collection = function(){
     return new Collection(parse(this.conf.blogPostsDir));
 };
 
-Genc.prototype.init = function*(dir){
-    if(!is.string(dir)) {
-        throw Error("Must define a directory.");
-    }
-    if(isDir(dir)) {
-        throw Error("Directory already exists, not overwriting.");
-    }
-    yield mkdirp(dir);
-    yield writeJson(join(dir, ".genc.json"), this.conf);
-    var tplDirs = ["templates/partials", "src"];
-    for(var dst of tplDirs){
-        yield mkdirp(join(dir, dst));
+Genc.prototype.init = function*(){
+    var dirs = ["posts", "pages", "templates", "static"];
+    for (var dir of dirs){
+        yield mkdirp(join("src", dir));
     }
 };
 
