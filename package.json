@@ -3,7 +3,7 @@
   "version": "1.0.6",
   "description": "site gen",
   "scripts": {
-    "test": "coffee test.js"
+    "test": "./node_modules/mocha/bin/mocha test.js"
   },
   "bin": {
     "genc": "cli.js"
@@ -16,19 +16,22 @@
     "argparse": "^1.0.2",
     "co": "^4.6.0",
     "editor": "^1.0.0",
-    "genc-parse": "battlemidget/genc-parse",
+    "fastmatter": "^1.1.0",
     "is": "^3.0.1",
     "is-dir-promise": "^1.0.0",
     "is-file-promise": "^1.0.0",
     "jade": "^1.11.0",
     "jsonfile": "^2.2.1",
+    "jstransformer-marked": "0.0.2",
     "lodash": "^3.10.0",
     "log": "^1.4.0",
+    "marked": "^0.3.3",
     "mkdirp": "^0.5.1",
     "moment": "^2.10.3",
     "mz": "^2.0.0",
     "native-or-bluebird": "^1.2.0",
-    "post-save": "battlemidget/post-save",
+    "rimraf": "^2.4.2",
+    "string": "^3.3.0",
     "toml": "^2.3.0"
   }
 }

@@ -1,25 +1,35 @@
 "use strict";
 
 var promise = require("native-or-bluebird");
-var parse = require("genc-parse");
 var fs = require("mz/fs");
+var fm = require("fastmatter");
 var isDir = require("is-dir-promise");
-var isFile = require("is-file-promise");
-var jsonfile = require("jsonfile");
 var join = require("path").join;
 var mkdirp = promise.promisify(require("mkdirp"));
+var rmdir = promise.promisify(require("rimraf"));
 var moment = require("moment");
 var editor = require("editor");
-var Collection = require("./collection");
+var _ = require("lodash");
+var jade = require("jade");
+var string = require("string");
 var Log = require("log");
 var log = new Log();
 
-jsonfile.spaces = 2;
-var writeJson = promise.promisify(jsonfile.writeFile, jsonfile);
-
 function Genc(conf){
     this.conf = conf;
+    this.srcContent = "src/content";
+    this.srcTemplate = "src/templates";
 }
+
+Genc.prototype.clean = function(){
+    return rmdir("build");
+};
+
+Genc.prototype.template = function(name, ctx){
+    var tmplPath = join(this.srcTemplate, name);
+    var jadeFn = jade.compileFile(tmplPath);
+    return jadeFn(ctx);
+};
 
 Genc.prototype.newPost = function*(title, tags){
     log.info("New post: %s, tags: %s", title, tags);
@@ -29,7 +39,7 @@ Genc.prototype.newPost = function*(title, tags){
         tags = "[]";
     }
 
-    var fullPath = join(this.conf.blogPostsDir, title + ".md");
+    var fullPath = join(this.srcContent, title + ".md");
     var timestamp = moment.utc().format();
     var template = "---\ntitle: " +
         title +
@@ -37,34 +47,58 @@ Genc.prototype.newPost = function*(title, tags){
         timestamp +
         "\ntags: " +
         tags +
+        "\ntemplate: post.jade" +
         "\n---\n\n# Write your post here\n\nFill in whatever blogish topic you want.";
-    if (yield isDir(this.conf.blogPostsDir)){
+    if (yield isDir(this.srcContent)){
         yield fs.writeFile(fullPath, template);
         return yield editor(fullPath);
     }
 };
 
-Genc.prototype.config = function(){
-    return JSON.stringify(this.conf);
-};
-
 Genc.prototype.collection = function(){
-    if (!isDir(this.conf.blogPostsDir)) {
+    var self = this;
+    if (!isDir("src/content")) {
         throw Error("Posts directory not found.");
     }
-    return new Collection(parse(this.conf.blogPostsDir));
+    return fs.readdir(this.srcContent)
+        .then(function(files){
+            var out = [];
+            _.each(files, function(f) {
+                var body = fs.readFileSync(join(self.srcContent, f), "utf8");
+                var matter = fm(body.toString());
+                var meta = {
+                    body: matter.body,
+                    filename: join(self.srcContent, f)
+                };
+                _.merge(meta, matter.attributes);
+                var noPermalink = meta.permalink === undefined;
+                if (noPermalink) {
+                    _.merge(meta, {
+                        permalink: string(matter.attributes.title).slugify().s
+                    });
+                }
+                out.push(meta);
+            });
+            return out;
+        });
 };
 
 Genc.prototype.init = function*(){
-    var dirs = ["posts", "pages", "templates", "static"];
+    var dirs = ["content", "templates", "static"];
+    log.info("Initializing directories [%s]", dirs);
     for (var dir of dirs){
         yield mkdirp(join("src", dir));
     }
 };
 
-Genc.prototype.export = function*(){
-    if (yield isFile(join(process.cwd(), ".genc.json"))){
-        return yield this.posts();
+Genc.prototype.build = function*(){
+    yield this.clean();
+    var content = yield this.collection();
+    for (var c of content){
+        var fullPath = join("build", c.permalink);
+        yield mkdirp(fullPath);
+        var out = this.template(c.template, c);
+        yield fs.writeFile(join(fullPath, "index.html"), out);
     }
 };
 
