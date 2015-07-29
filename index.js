@@ -7,6 +7,7 @@ var isDir = require("is-dir-promise");
 var join = require("path").join;
 var mkdirp = promise.promisify(require("mkdirp"));
 var rmdir = promise.promisify(require("rimraf"));
+var marked = require("marked");
 var moment = require("moment");
 var editor = require("editor");
 var _ = require("lodash");
@@ -57,7 +58,7 @@ Genc.prototype.newPost = function*(title, tags){
 
 Genc.prototype.collection = function(){
     var self = this;
-    if (!isDir("src/content")) {
+    if (!isDir(self.srcContent)) {
         throw Error("Posts directory not found.");
     }
     return fs.readdir(this.srcContent)
@@ -67,7 +68,7 @@ Genc.prototype.collection = function(){
                 var body = fs.readFileSync(join(self.srcContent, f), "utf8");
                 var matter = fm(body.toString());
                 var meta = {
-                    body: matter.body,
+                    body: marked(matter.body),
                     filename: join(self.srcContent, f)
                 };
                 _.merge(meta, matter.attributes);
@@ -77,9 +78,15 @@ Genc.prototype.collection = function(){
                         permalink: string(matter.attributes.title).slugify().s
                     });
                 }
+                var noTemplate = meta.tempalte === undefined;
+                if (noTemplate){
+                    _.merge(meta, {
+                        template: "post.jade"
+                    });
+                }
                 out.push(meta);
             });
-            return out;
+            return promise.all(_.sortByAll(out, ["date"]));
         });
 };
 
@@ -91,14 +98,26 @@ Genc.prototype.init = function*(){
     }
 };
 
+Genc.prototype.writeSingle = function*(fullPath, c){
+    log.debug("Building: %s (permalink: %s)", c.filename, c.permalink);
+    yield mkdirp(fullPath);
+    log.debug("Applying Template: (%s) -> %s", c.template, c.title);
+    var out = this.template(c.template, c);
+    yield fs.writeFile(join(fullPath, "index.html"), out);
+};
+
+Genc.prototype.writeCollection = function*(path, template, ctx){
+    var out = this.template(template, {items: ctx});
+    yield fs.writeFile(path, out);
+};
+
 Genc.prototype.build = function*(){
-    yield this.clean();
     var content = yield this.collection();
+    yield this.writeCollection("build/index.html", "index.jade", content);
+    yield this.writeCollection("build/feed.xml", "index.jade", content);
+    yield this.writeCollection("build/sitemap.xml", "index.jade", content);
     for (var c of content){
-        var fullPath = join("build", c.permalink);
-        yield mkdirp(fullPath);
-        var out = this.template(c.template, c);
-        yield fs.writeFile(join(fullPath, "index.html"), out);
+        yield this.writeSingle(join("build", c.permalink), c);
     }
 };
 

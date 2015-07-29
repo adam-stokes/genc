@@ -5,8 +5,10 @@ var co = require("co");
 var Argparse = require("argparse").ArgumentParser;
 var gencConf = require("./package.json");
 var Genc = require(".");
+var _ = require("lodash");
 var fs = require("mz/fs");
 var toml = require("toml");
+var join = require("path").join;
 var Log = require("log");
 var log = new Log();
 
@@ -39,14 +41,28 @@ co(function*() {
     );
 
     subparser.addParser("init", {addHelp: true, help: "Initialize a project."});
+    subparser.addParser("sitemap", {addHelp: true, help: "Generate a sitemap"});
     subparser.addParser("build", {addHelp: true, help: "Build your site."});
+    var feed = subparser.addParser("feed", {addHelp: true, help: "Generate a RSS feed."});
+    feed.addArgument(
+        ["--tag"],
+        {
+            action: "store",
+            help: "Filter by a tag."
+        }
+    );
+
 
     var args = parser.parseArgs();
     if(args.command === "new"){
         yield app.newPost(args.title, args.tags);
     }
+    if (args.command === "feed"){
+        yield app.writeFeed(args.tag, "feed.jade");
+    }
     if (args.command === "build"){
-        yield app.build();
+        var collection = yield app.collection();
+        yield app.writeCollection("build/index.html", "index.jade", collection);
     }
     if (args.command === "init"){
         yield app.init();
