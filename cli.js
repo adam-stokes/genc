@@ -1,72 +1,38 @@
 #!/usr/bin/env node
 "use strict";
 
-var co = require("co");
-var Argparse = require("argparse").ArgumentParser;
-var gencConf = require("./package.json");
-var Genc = require(".");
-var _ = require("lodash");
-var fs = require("mz/fs");
-var toml = require("toml");
-var join = require("path").join;
-var Log = require("log");
-var log = new Log();
+const co = require("co");
+const Argparse = require("argparse").ArgumentParser;
+const gencConf = require("./package.json");
+const Genc = require(".");
+const fs = require("mz/fs");
+const join = require("path").join;
+const log = require('winston');
 
 co(function*() {
-    var app = new Genc(toml.parse(yield fs.readFile("./config.toml")));
-    var parser = new Argparse({
+    let parser = new Argparse({
         version: gencConf.version,
         addHelp: true,
         description: "genc - the opinionated static site generator"
     });
-
-    var subparser = parser.addSubparsers({
-        title: "subcommands",
-        dest: "command"
-    });
-
-    var newPost = subparser.addParser("new", {addHelp: true, help: "Create a new page/post."});
-    newPost.addArgument(
-        ["title"],
-        {
-            help: "Title of page."
-        }
-    );
-    newPost.addArgument(
-        ["-t", "--tags"],
+    parser.addArgument(
+        ["--src"],
         {
             action: "store",
-            help: "Tags associated with article."
+            help: "Path where markdown files reside."
         }
     );
 
-    subparser.addParser("init", {addHelp: true, help: "Initialize a project."});
-    subparser.addParser("sitemap", {addHelp: true, help: "Generate a sitemap"});
-    subparser.addParser("build", {addHelp: true, help: "Build your site."});
-    var feed = subparser.addParser("feed", {addHelp: true, help: "Generate a RSS feed."});
-    feed.addArgument(
-        ["--tag"],
+    parser.addArgument(
+        ["--template"],
         {
             action: "store",
-            help: "Filter by a tag."
+            help: "Template to bind to"
         }
     );
 
-
-    var args = parser.parseArgs();
-    if(args.command === "new"){
-        yield app.newPost(args.title, args.tags);
-    }
-    if (args.command === "feed"){
-        yield app.writeFeed(args.tag, "feed.jade");
-    }
-    if (args.command === "build"){
-        var collection = yield app.collection();
-        yield app.writeCollection("build/index.html", "index.jade", collection);
-    }
-    if (args.command === "init"){
-        yield app.init();
-    }
+    let args = parser.parseArgs();
+    let app = new Genc(args);
 }).catch(function(e) {
     log.error(e);
 });
