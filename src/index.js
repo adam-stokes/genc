@@ -63,6 +63,6 @@ export async function collection(source, destination) {
     }
     debug("generating index");
     let indexTemplate = jade.compileFile(join(source, 'index.jade'));
-    let output = indexTemplate({posts: _.sortBy(results, ['date'])});
+    let output = indexTemplate({posts: _.reverse(_.sortBy(results, ['date']))});
     await fs.writeFile(join('build', 'index.html'), output);
 }
