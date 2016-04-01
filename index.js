@@ -15,6 +15,8 @@ const jade = require("jade");
 const string = require("string");
 const log = require('winston');
 
+module.exports = Genc;
+
 function Genc(args){
     this.args = args;
     this.src = args.src;
@@ -25,15 +27,16 @@ function Genc(args){
 }
 
 Genc.prototype.collection = () => {
+    log.info("Querying %s", this.src);
     return fs.readdir(this.src)
         .then((files) => {
             let out = [];
             _.each(files, (f) => {
-                let body = fs.readFileSync(join(this.srcContent, f), "utf8");
+                let body = fs.readFileSync(join(this.src, f), "utf8");
                 let matter = fm(body.toString());
                 let meta = {
                     body: marked(matter.body),
-                    filename: join(this.srcContent, f)
+                    filename: join(this.src, f)
                 };
                 _.merge(meta, matter.attributes);
                 let noPermalink = meta.permalink === undefined;
@@ -42,7 +45,7 @@ Genc.prototype.collection = () => {
                         permalink: string(matter.attributes.title).slugify().s
                     });
                 }
-                let noTemplate = meta.tempalte === undefined;
+                let noTemplate = meta.template === undefined;
                 if (noTemplate){
                     _.merge(meta, {
                         template: "post.jade"
@@ -55,26 +58,25 @@ Genc.prototype.collection = () => {
 };
 
 Genc.prototype.writeSingle = function*(fullPath, c){
-    log.debug("Building: %s (permalink: %s)", c.filename, c.permalink);
+    log.info("Building: %s (permalink: %s)", c.filename, c.permalink);
     yield mkdirp(fullPath);
-    log.debug("Applying Template: (%s) -> %s", c.template, c.title);
-    let out = this.template(c.template, c);
+    let out = this.template(c);
     yield fs.writeFile(join(fullPath, "index.html"), out);
 };
 
-Genc.prototype.writeCollection = function*(path, template, ctx){
-    let out = this.template(template, {items: ctx});
+Genc.prototype.writeCollection = function*(path, ctx){
+    let out = this.template({items: ctx});
     yield fs.writeFile(path, out);
 };
 
 Genc.prototype.build = function*(){
     let content = yield this.collection();
-    yield this.writeCollection("build/index.html", "index.jade", content);
-    yield this.writeCollection("build/feed.xml", "index.jade", content);
-    yield this.writeCollection("build/sitemap.xml", "index.jade", content);
+    yield this.writeCollection("build/index.html", content);
+    yield this.writeCollection("build/feed.xml", content);
+    yield this.writeCollection("build/sitemap.xml", content);
     for (let c of content){
+        log.info("context: "+ c);
         yield this.writeSingle(join("build", c.permalink), c);
     }
 };
 
-module.exports = Genc;

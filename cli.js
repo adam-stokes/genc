@@ -33,6 +33,7 @@ co(function*() {
 
     let args = parser.parseArgs();
     let app = new Genc(args);
+    yield app.build();
 }).catch(function(e) {
     log.error(e);
 });
