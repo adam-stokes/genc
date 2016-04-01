@@ -1,17 +1,14 @@
 #!/usr/bin/env node
 "use strict";
 
-const co = require("co");
-const Argparse = require("argparse").ArgumentParser;
-const gencConf = require("./package.json");
-const Genc = require(".");
-const fs = require("mz/fs");
-const join = require("path").join;
-const log = require('winston');
+import {ArgumentParser} from 'argparse';
+import Genc from './index';
+import log from 'winston';
+import pkg from '../package.json';
 
-co(function*() {
-    let parser = new Argparse({
-        version: gencConf.version,
+async function start() {
+    let parser = new ArgumentParser({
+        version: pkg.version,
         addHelp: true,
         description: "genc - the opinionated static site generator"
     });
@@ -33,7 +30,12 @@ co(function*() {
 
     let args = parser.parseArgs();
     let app = new Genc(args);
-    yield app.build();
-}).catch(function(e) {
-    log.error(e);
-});
+    log.info(app);
+    try {
+        await app.collection();
+    } catch (err) {
+        log.info(err);
+    }
+}
+
+start().catch((err) => log.info(err));
