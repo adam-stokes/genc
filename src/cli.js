@@ -9,11 +9,10 @@ import log from 'winston';
 
 function usage() {
     console.log(
-            `usage: genc --src SRC --template TEMPLATE -o OUTDIR
+            `usage: genc --src SRC -o OUTDIR
 
  Options:
   --src DIR       source directory of posts
-  --template FILE jade template filename
   -o, --output DIR directory to store build
   -h              show help
             `);
@@ -34,13 +33,13 @@ async function start() {
         usage();
     }
 
-    if (!argv.src || !argv.template || !argv.output) {
-        log.error('Needs --src, --template, and --output set.');
+    if (!argv.src || !argv.output) {
+        log.error('Needs --src, and --output set.');
         usage();
     }
 
     try {
-        await collection(argv.src, argv.output, argv.template);
+        await collection(argv.src, argv.output);
     } catch (err) {
         debug(err);
     }
