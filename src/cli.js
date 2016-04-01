@@ -1,41 +1,49 @@
 #!/usr/bin/env node
 "use strict";
 
-import {ArgumentParser} from 'argparse';
-import Genc from './index';
-import log from 'winston';
+import minimist from 'minimist';
+import {collection} from './index';
 import pkg from '../package.json';
+import debug from './debug';
+import log from 'winston';
+
+function usage() {
+    console.log(
+            `usage: genc --src SRC --template TEMPLATE -o OUTDIR
+
+ Options:
+  --src DIR       source directory of posts
+  --template FILE jade template filename
+  -o, --output DIR directory to store build
+  -h              show help
+            `);
+    process.exit();
+}
 
 async function start() {
-    let parser = new ArgumentParser({
-        version: pkg.version,
-        addHelp: true,
-        description: "genc - the opinionated static site generator"
+    let argv = minimist(process.argv.slice(2), {
+        string: ['src', 'template', 'output'],
+        boolean: ['--help'],
+        alias: {
+            help: 'h',
+            output: 'o'
+        }
     });
-    parser.addArgument(
-        ["--src"],
-        {
-            action: "store",
-            help: "Path where markdown files reside."
-        }
-    );
 
-    parser.addArgument(
-        ["--template"],
-        {
-            action: "store",
-            help: "Template to bind to"
-        }
-    );
+    if (argv.help) {
+        usage();
+    }
 
-    let args = parser.parseArgs();
-    let app = new Genc(args);
-    log.info(app);
+    if (!argv.src || !argv.template || !argv.output) {
+        log.error('Needs --src, --template, and --output set.');
+        usage();
+    }
+
     try {
-        await app.collection();
+        await collection(argv.src, argv.output, argv.template);
     } catch (err) {
-        log.info(err);
+        debug(err);
     }
 }
 
-start().catch((err) => log.info(err));
+start().catch((err) => debug(err));

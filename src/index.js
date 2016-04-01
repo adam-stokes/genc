@@ -1,78 +1,63 @@
 'use strict';
 
 import pify from 'pify';
+import glob from 'glob';
 import fs from 'mz/fs';
 import jade from 'jade';
 import log from 'winston';
 import _  from 'lodash';
 import fm from 'fastmatter';
-// const fm = require("fastmatter");
-// const isFile = require("is-file-promise");
-// const join = require("path").join;
-// const mkdirp = pify(require("mkdirp"));
-// const rmdir = pify(require("rimraf"));
-// const marked = require("marked");
-// const moment = require("moment");
-// const string = require("string");
+import {join} from 'path';
+import marked from 'marked';
+import is from 'is';
+import debug from './debug';
+import string from 'string';
+import isfile from 'is-file-promise';
+import isdir from 'is-dir-promise';
+import mkdirp from 'mkdirp';
+import rmdir from 'rimraf';
 
-export default class {
-    constructor(args) {
-        this.args = args;
-        this.src = args.src;
-        // this.template = jade.compileFile(args.template);
+async function parse(item, template) {
+    let body = await fs.readFile(item, 'utf8');
+    let matter = fm(body.toString());
+    let meta = {
+        body: await pify(marked)(matter.body),
+        filename: item,
+        template: template
+    };
+    _.merge(meta, matter.attributes);
+    let noPermalink = meta.permalink === undefined;
+    if (noPermalink) {
+        _.merge(meta, {
+            permalink: string(matter.attributes.title).slugify().s
+        });
     }
-    async collection() {
-        log.info("Querying %s", this.src);
-        let items = await fs.readdir(this.src);
-        for (let i of items) {
-            log.info("processing: %s", i);
-            let body = await fs.readFile(join(this.src, i), 'utf8');
-            let matter = await pify(fm)(body.toString());
-        }
-        //         let out = [];
-        //         _.each(files, (f) => {
-        //             let body = fs.readFileSync(join(this.src, f), "utf8");
-        //             let matter = fm(body.toString());
-        //             let meta = {
-        //                 body: marked(matter.body),
-        //                 filename: join(this.src, f)
-        //             };
-        //             _.merge(meta, matter.attributes);
-        //             let noPermalink = meta.permalink === undefined;
-        //             if (noPermalink) {
-        //                 _.merge(meta, {
-        //                     permalink: string(matter.attributes.title).slugify().s
-        //                 });
-        //             }
-        //             let noTemplate = meta.template === undefined;
-        //             if (noTemplate){
-        //                 _.merge(meta, {
-        //                     template: "post.jade"
-        //                 });
-        //             }
-        //             out.push(meta);
-        //         });
-        //         return promise.all(_.sortByAll(out, ["date"]));
-        // });
+
+    return meta;
+}
+
+async function render(ctx) {
+    let compiled = jade.compileFile(ctx.template);
+    let output = compiled(ctx);
+    await pify(mkdirp)(join('build', ctx.permalink));
+    await fs.writeFile(join('build', ctx.permalink, "index.html"), output);
+    debug(`rendered ${ctx.title}`);
+}
+
+export async function collection(source, destination, template) {
+    if(await isdir(destination)) {
+        await pify(rmdir)(destination);
     }
-    async writeSingle(path, c) {
-        log.info("Building: %s (permalink: %s)", c.filename, c.permalink);
-        await mkdirp(fullPath);
-        let out = this.template(c);
-        await fs.writeFile(join(fullPath, "index.html"), out);
+    await pify(mkdirp)(destination);
+
+    debug("reading directory %s", source);
+    let items = await pify(glob)(`${source}/\*.md`);
+    let promisedItems = items.map((i) => parse(i, template));
+    let results = [];
+    for (let promise of promisedItems) {
+        results.push(await promise);
     }
-    async writeCollection(path, ctx) {
-        let out = this.template({items: ctx});
-        await fs.writeFile(path, out);
+    for (let res of results) {
+        await render(res);
     }
-    async build() {
-        let content = await this.collection();
-        await this.writeCollection("build/index.html", content);
-        await this.writeCollection("build/feed.xml", content);
-        await this.writeCollection("build/sitemap.xml", content);
-        for (let c of content) {
-            log.info("context: "+ c);
-            await this.writeSingle(join("build", c.permalink), c);
-        }
-    }
-};
+}
