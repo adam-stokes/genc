@@ -27,7 +27,7 @@ var _winston2 = _interopRequireDefault(_winston);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function usage() {
-    console.log('usage: genc --src SRC -o OUTDIR\n\n Options:\n  --src DIR       source directory of posts\n  -o, --output DIR directory to store build\n  -h              show help\n            ');
+    console.log('usage: genc --source SOURCE --output OUTDIR --post-template <post>.pug --list-template <list>.pug\n\n Options:\n  --source DIR    directory of posts\n  --output DIR    directory to store build\n  --post-template path to single post template\n  --list-template path to posts listing template\n  -h              show help\n            ');
     process.exit();
 }
 
@@ -38,44 +38,45 @@ function start() {
             switch (_context.prev = _context.next) {
                 case 0:
                     argv = (0, _minimist2.default)(process.argv.slice(2), {
-                        string: ['src', 'template', 'output'],
+                        string: ['source', 'post-template', 'list-template', 'output'],
                         boolean: ['--help'],
                         alias: {
-                            help: 'h',
-                            output: 'o'
+                            help: 'h'
                         }
                     });
 
+
+                    (0, _debug2.default)(argv);
 
                     if (argv.help) {
                         usage();
                     }
 
-                    if (!argv.src || !argv.output) {
-                        _winston2.default.error('Needs --src, and --output set.');
+                    if (!argv.source || !argv.output || !argv['post-template'] || !argv['list-template']) {
+                        _winston2.default.error('Needs --source,  --output, --post-template, and --list-template set.');
                         usage();
                     }
 
-                    _context.prev = 3;
-                    _context.next = 6;
-                    return _regenerator2.default.awrap((0, _index.collection)(argv.src, argv.output));
+                    _context.prev = 4;
+                    _context.next = 7;
+                    return _regenerator2.default.awrap((0, _index.collection)(argv.source, argv.output, argv['post-template'], argv['list-template']));
 
-                case 6:
-                    _context.next = 11;
+                case 7:
+                    _context.next = 12;
                     break;
 
-                case 8:
-                    _context.prev = 8;
-                    _context.t0 = _context['catch'](3);
+                case 9:
+                    _context.prev = 9;
+                    _context.t0 = _context['catch'](4);
 
                     (0, _debug2.default)(_context.t0);
 
-                case 11:
+                case 12:
                 case 'end':
                     return _context.stop();
             }
         }
-    }, null, this, [[3, 8]]);
+    }, null, this, [[4, 9]]);
 }
 
 start().catch(function (err) {

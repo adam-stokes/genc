@@ -15,7 +15,7 @@ import isdir from 'is-dir-promise';
 import mkdirp from 'mkdirp';
 import rmdir from 'rimraf';
 import moment from 'moment';
-import jade from 'jade';
+import pug from 'pug';
 
 async function parse(item, template) {
     let body = await fs.readFile(item, 'utf8');
@@ -37,20 +37,20 @@ async function parse(item, template) {
     return meta;
 }
 
-async function render(ctx) {
+async function render(dst, ctx) {
     let output = ctx.template(ctx);
-    await pify(mkdirp)(join('build', ctx.permalink));
-    await fs.writeFile(join('build', ctx.permalink, "index.html"), output);
-    debug(`rendered ${ctx.date} - ${ctx.title}`);
+    await pify(mkdirp)(join(dst, ctx.permalink));
+    await fs.writeFile(join(dst, ctx.permalink, "index.html"), output);
+    log.info(`Rendered ${ctx.date} - ${ctx.title}`);
 }
 
-export async function collection(source, destination) {
+export async function collection(source, destination, post_tpl, list_tpl) {
     if(await isdir(destination)) {
         await pify(rmdir)(destination);
     }
     await pify(mkdirp)(destination);
 
-    let template = jade.compileFile(join(source, 'post.jade'));
+    let template = pug.compileFile(post_tpl);
     debug("reading directory %s", source);
     let items = await pify(glob)(`${source}/\*.md`);
     let promisedItems = items.map((i) => parse(i, template));
@@ -59,10 +59,11 @@ export async function collection(source, destination) {
         results.push(await promise);
     }
     for (let res of _.sortBy(results, ['date'])) {
-        await render(res);
+        await render(destination, res);
     }
     debug("generating index");
-    let indexTemplate = jade.compileFile(join(source, 'index.jade'));
+    let indexTemplate = pug.compileFile(list_tpl);
     let output = indexTemplate({posts: _.reverse(_.sortBy(results, ['date']))});
-    await fs.writeFile(join('build', 'index.html'), output);
+    await fs.writeFile(join(destination, 'index.html'), output);
+    log.info(`Site built and located at ${destination}.`);
 }

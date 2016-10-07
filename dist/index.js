@@ -72,9 +72,9 @@ var _moment = require('moment');
 
 var _moment2 = _interopRequireDefault(_moment);
 
-var _jade = require('jade');
+var _pug = require('pug');
 
-var _jade2 = _interopRequireDefault(_jade);
+var _pug2 = _interopRequireDefault(_pug);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -124,7 +124,7 @@ function parse(item, template) {
     }, null, this);
 }
 
-function render(ctx) {
+function render(dst, ctx) {
     var output;
     return _regenerator2.default.async(function render$(_context2) {
         while (1) {
@@ -132,14 +132,14 @@ function render(ctx) {
                 case 0:
                     output = ctx.template(ctx);
                     _context2.next = 3;
-                    return _regenerator2.default.awrap((0, _pify2.default)(_mkdirp2.default)((0, _path.join)('build', ctx.permalink)));
+                    return _regenerator2.default.awrap((0, _pify2.default)(_mkdirp2.default)((0, _path.join)(dst, ctx.permalink)));
 
                 case 3:
                     _context2.next = 5;
-                    return _regenerator2.default.awrap(_fs2.default.writeFile((0, _path.join)('build', ctx.permalink, "index.html"), output));
+                    return _regenerator2.default.awrap(_fs2.default.writeFile((0, _path.join)(dst, ctx.permalink, "index.html"), output));
 
                 case 5:
-                    (0, _debug2.default)('rendered ' + ctx.date + ' - ' + ctx.title);
+                    _winston2.default.info('Rendered ' + ctx.date + ' - ' + ctx.title);
 
                 case 6:
                 case 'end':
@@ -149,7 +149,7 @@ function render(ctx) {
     }, null, this);
 }
 
-function collection(source, destination) {
+function collection(source, destination, post_tpl, list_tpl) {
     var template, items, promisedItems, results, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, promise, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, res, indexTemplate, output;
 
     return _regenerator2.default.async(function collection$(_context3) {
@@ -173,7 +173,7 @@ function collection(source, destination) {
                     return _regenerator2.default.awrap((0, _pify2.default)(_mkdirp2.default)(destination));
 
                 case 7:
-                    template = _jade2.default.compileFile((0, _path.join)(source, 'post.jade'));
+                    template = _pug2.default.compileFile(post_tpl);
 
                     (0, _debug2.default)("reading directory %s", source);
                     _context3.next = 11;
@@ -261,7 +261,7 @@ function collection(source, destination) {
 
                     res = _step2.value;
                     _context3.next = 52;
-                    return _regenerator2.default.awrap(render(res));
+                    return _regenerator2.default.awrap(render(destination, res));
 
                 case 52:
                     _iteratorNormalCompletion2 = true;
@@ -304,12 +304,15 @@ function collection(source, destination) {
 
                 case 69:
                     (0, _debug2.default)("generating index");
-                    indexTemplate = _jade2.default.compileFile((0, _path.join)(source, 'index.jade'));
+                    indexTemplate = _pug2.default.compileFile(list_tpl);
                     output = indexTemplate({ posts: _lodash2.default.reverse(_lodash2.default.sortBy(results, ['date'])) });
                     _context3.next = 74;
-                    return _regenerator2.default.awrap(_fs2.default.writeFile((0, _path.join)('build', 'index.html'), output));
+                    return _regenerator2.default.awrap(_fs2.default.writeFile((0, _path.join)(destination, 'index.html'), output));
 
                 case 74:
+                    _winston2.default.info('Site built and located at ' + destination + '.');
+
+                case 75:
                 case 'end':
                     return _context3.stop();
             }
