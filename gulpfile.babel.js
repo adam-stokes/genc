@@ -4,7 +4,7 @@ import gulp from 'gulp';
 import babel from 'gulp-babel';
 
 gulp.task('watch', () => {
-    return gulp.watch('./src/**/*', ['js']);
+    return gulp.watch('./src/**/*', ['backend']);
 });
 
 

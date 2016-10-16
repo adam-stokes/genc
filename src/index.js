@@ -17,6 +17,7 @@ import rmdir from 'rimraf';
 import moment from 'moment';
 import pug from 'pug';
 
+// parse post
 async function parse(item, template) {
     let body = await fs.readFile(item, 'utf8');
     let matter = fm(body.toString());

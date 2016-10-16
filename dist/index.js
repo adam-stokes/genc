@@ -78,6 +78,7 @@ var _pug2 = _interopRequireDefault(_pug);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+// parse post
 function parse(item, template) {
     var body, matter, meta, noPermalink;
     return _regenerator2.default.async(function parse$(_context) {
