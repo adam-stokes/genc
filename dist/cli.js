@@ -24,10 +24,16 @@ var _winston = require('winston');
 
 var _winston2 = _interopRequireDefault(_winston);
 
+var _isFilePromise = require('is-file-promise');
+
+var _isFilePromise2 = _interopRequireDefault(_isFilePromise);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+_winston2.default.level = 'debug';
+
 function usage() {
-    console.log('usage: genc --source SOURCE --output OUTDIR --post-template <post>.pug --list-template <list>.pug\n\n Options:\n  --source DIR    directory of posts\n  --output DIR    directory to store build\n  --post-template path to single post template\n  --list-template path to posts listing template\n  -h              show help\n            ');
+    console.log('usage: genc\n\n Options:\n  -h              show help\n            ');
     process.exit();
 }
 
@@ -38,7 +44,6 @@ function start() {
             switch (_context.prev = _context.next) {
                 case 0:
                     argv = (0, _minimist2.default)(process.argv.slice(2), {
-                        string: ['source', 'post-template', 'list-template', 'output'],
                         boolean: ['--help'],
                         alias: {
                             help: 'h'
@@ -52,31 +57,53 @@ function start() {
                         usage();
                     }
 
-                    if (!argv.source || !argv.output || !argv['post-template'] || !argv['list-template']) {
-                        _winston2.default.error('Needs --source,  --output, --post-template, and --list-template set.');
-                        usage();
+                    _context.next = 5;
+                    return _regenerator2.default.awrap(!(0, _isFilePromise2.default)('_templates/index.pug'));
+
+                case 5:
+                    _context.t0 = _context.sent;
+
+                    if (_context.t0) {
+                        _context.next = 10;
+                        break;
                     }
 
-                    _context.prev = 4;
-                    _context.next = 7;
-                    return _regenerator2.default.awrap((0, _index.collection)(argv.source, argv.output, argv['post-template'], argv['list-template']));
-
-                case 7:
-                    _context.next = 12;
-                    break;
+                    _context.next = 9;
+                    return _regenerator2.default.awrap(!(0, _isFilePromise2.default)('_templates/post.pug'));
 
                 case 9:
-                    _context.prev = 9;
-                    _context.t0 = _context['catch'](4);
+                    _context.t0 = _context.sent;
 
-                    (0, _debug2.default)(_context.t0);
+                case 10:
+                    if (!_context.t0) {
+                        _context.next = 13;
+                        break;
+                    }
 
-                case 12:
+                    _winston2.default.debug("Unable to find _templates/{index,post}.pug.");
+                    process.exit();
+
+                case 13:
+                    _context.prev = 13;
+                    _context.next = 16;
+                    return _regenerator2.default.awrap((0, _index.collection)());
+
+                case 16:
+                    _context.next = 21;
+                    break;
+
+                case 18:
+                    _context.prev = 18;
+                    _context.t1 = _context['catch'](13);
+
+                    (0, _debug2.default)(_context.t1);
+
+                case 21:
                 case 'end':
                     return _context.stop();
             }
         }
-    }, null, this, [[4, 9]]);
+    }, null, this, [[13, 18]]);
 }
 
 start().catch(function (err) {

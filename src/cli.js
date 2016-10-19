@@ -6,16 +6,15 @@ import {collection} from './index';
 import pkg from '../package.json';
 import debug from './debug';
 import log from 'winston';
+import isfile from 'is-file-promise';
+
+log.level = 'debug';
 
 function usage() {
     console.log(
-            `usage: genc --source SOURCE --output OUTDIR --post-template <post>.pug --list-template <list>.pug
+            `usage: genc
 
  Options:
-  --source DIR    directory of posts
-  --output DIR    directory to store build
-  --post-template path to single post template
-  --list-template path to posts listing template
   -h              show help
             `);
     process.exit();
@@ -23,7 +22,6 @@ function usage() {
 
 async function start() {
     let argv = minimist(process.argv.slice(2), {
-        string: ['source', 'post-template', 'list-template', 'output'],
         boolean: ['--help'],
         alias: {
             help: 'h'
@@ -36,13 +34,13 @@ async function start() {
         usage();
     }
 
-    if (!argv.source || !argv.output || !argv['post-template'] || !argv['list-template']) {
-        log.error('Needs --source,  --output, --post-template, and --list-template set.');
-        usage();
+    if(await !isfile('_templates/index.pug') || await !isfile('_templates/post.pug')) {
+        log.debug("Unable to find _templates/{index,post}.pug.");
+        process.exit();
     }
 
     try {
-        await collection(argv.source, argv.output, argv['post-template'], argv['list-template']);
+        await collection();
     } catch (err) {
         debug(err);
     }
